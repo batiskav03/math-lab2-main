@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="main">
+        <div class="pomoika">
+            <div class="linear">
+                <form>
+                    <h1>Choose your function:</h1>
+                    <ul>
+                        <li><input type="radio" name="func" class="func" id="1_func" value="1"><strong>f(x) = 4,45x<sup>3</sup> + 7,81x<sup>2</sup> - 9,62x - 8,17</strong></input></li>
+                        <li><input type="radio" name="func" class="func" id="2_func" value="2"><strong>f(x) = log<sub><i>e</i></sub>x</strong></input></li>
+                        <li><input type="radio" name="func" class="func" id="3_func" value="3"><strong>f(x) = x<sup>2</sup> + 3,22x - 1,11</strong></input></li>
+                        <li><input type="radio" name="func" class="func" id="4_func" value="4"><strong>f(x) = <i>sin</i>(x/2) * 3,14 + <i>cos</i>(x)</strong></input></li>
+                        <li><input type="radio" name="func" class="func" id="5_func" value="5"><strong>f(x) = x<sup>3</sup> - 3,78x<sup>2</sup> + 1,25x + 3,49</strong></input></li>
+                        <div>
+                            <strong>Точность:</strong>
+                        </div>
+                        <input id="accuracy" value="0.01"></input>
+                        <div><strong>Границы интервала:</strong></div>
+                        a<sub>0</sub> = <input id="a0" value="-15">
+                        b<sub>0</sub> = <input id="b0" value="15">
+                        <div><strong>Начальное приближение:</strong></div>
+                        
+                        x<sub>1</sub> = <input id="x1" value="3">
+                    </ul>
+                    <button id="sub">Посчитать</button>
+                </form>
+            </div>
+            <div class="unlinear">
+                <form>
+                    <h1>Choose your system:</h1>
+                    <ul>
+                        <li><input type="radio" name="func" class="un" id="1_func" value="1"><strong>1-ая система</strong></input></li>
+                        <li><input type="radio" name="func" class="un" id="2_func" value="2"><strong>2-ая система</strong></input></li>
+                        <li><input type="radio" name="func" class="un" id="3_func" value="3"><strong>3-я система</strong></input></li>
+                        <div>
+                            <strong>Точность:</strong>
+                        </div>
+                        <input id="accuracy" value="0.01"></input>
+                        <div><strong>Начальное приближение:</strong></div>
+                        x<sub>0</sub> = <input id="x0_un" value="3">
+                        x<sub>1</sub> = <input id="x1_un" value="3">
+                    </ul>
+                    <button id="sub2">Посчитать</button>
+                </form>
+            </div>
+        </div>
+        <canvas>
+        </canvas>
+    </div>
+</body>
+<script src="./script.js"></script>
+</html> 

@@ -1,0 +1,19 @@
+canvas {
+    border: 1px solid black;
+}
+
+.main {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.pomoika {
+    padding: 20px;
+    float: left;
+}
+
+
+ul {
+    list-style-type: square; /* Квадратные маркеры */
+}
+  
