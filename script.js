@@ -40,7 +40,8 @@ let main_func = f1
 
 // Метод прямоугольников
 function square_method(func, interval, step) {
-    function right(func, interval, total_iterations) {
+    function right(func, interval, step) {
+        const total_iterations = (interval[1] - interval[0])/step
         let sum = 0
         let i = 0
         let x_i = interval[0] + step
@@ -50,10 +51,11 @@ function square_method(func, interval, step) {
             i++
         }
         
-        return sum
+        return sum * step
     }
 
-    function left(func, interval, total_iterations) {
+    function left(func, interval, step) {
+        const total_iterations = (interval[1] - interval[0])/step
         let sum = 0
         let i = 0
         let x_i = interval[0]
@@ -63,10 +65,11 @@ function square_method(func, interval, step) {
             i++
         }
 
-        return sum
+        return sum * step
     }
 
-    function middle(func, interval, total_iterations) {
+    function middle(func, interval, step) {
+        const total_iterations = (interval[1] - interval[0])/step
         let x_prev = interval[0]
         let sum = 0
         let i = 0
@@ -77,18 +80,19 @@ function square_method(func, interval, step) {
             x_prev = x_i
             x_i += step
             i++
+            
         }
-    
-        return sum
+
+        return sum * step
     }
     
-    const total_iterations = (interval[1] - interval[0])/step
     
-    console.log(right(func, interval, total_iterations))
+    
+    console.log(right(func, interval, step))
     console.log("--------")
-    console.log(middle(func, interval, total_iterations))
+    console.log(middle(func, interval, step))
     console.log("--------")
-    console.log(left(func, interval, total_iterations))
+    console.log(left(func, interval, step))
     console.log("--------")
 
 }
