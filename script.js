@@ -11,9 +11,8 @@
 // 7 - Метод простой итерации
 
 let ACCURACY = 0.01
-let interval_ogr = [-15,15]
-let first_apr = 3
-let interval_un_apr = [3,3]
+const FIRST_N = 4
+let interval_ogr = [1,2]
 // производная
 function first_derivative(func, x, dx) {
     dx = dx || 0.00000001
@@ -23,428 +22,423 @@ function first_derivative(func, x, dx) {
 
 function f1(x) {
 
-    return 4.45*Math.pow(x,3) + 7.81*Math.pow(x,2) - 9.62*x - 8.17
+    return Math.pow(x,3) - 9*x - 8
 }
 
 function f2(x) {
+
+    return Math.log(x)
+}
+
+function f3(x) {
+
+    return x*x + 3.22 * x - 1.11
+}
+
+function f4(x) {
 
     return x * x
 }
 
 
+function F1(x) {
+   return x**4/4 - (9/2) * (x ** 2) - 8 * x
+}
+
+function F2(x) {
+    return x*Math.log(x) - x
+}
+ 
+function F3(x) {
+    return (x**3)/3 + (3.22/2) * (x**2) - 1.11*x
+}
+
+function F4(x) {
+    return x**3/3
+}
 
 
 let main_func = f1
+let main_F = f1
 
 
 
 // Метод прямоугольников
-function square_method(func, interval, step) {
-    function right(func, interval, step) {
-        const total_iterations = (interval[1] - interval[0])/step
-        let sum = 0
-        let i = 0
-        let x_i = interval[0] + step
-        while (i < total_iterations) {
-            sum += func(x_i)
-            x_i += step
-            i++
+function square_method(func, interval, total_iterations) {
+    function right(func, interval, total_iterations) {
+        let R = 1
+        let final_sum
+        while (true) {
+            let step = (interval[1] - interval[0])/total_iterations
+            let sum_1 = 0
+            let i = 0
+            let x_i = interval[0] + step
+            while (i < total_iterations) {
+                sum_1 += func(x_i)
+                x_i += step
+                i++
+            }
+            sum_1 = sum_1 * step
+            
+            i = 0
+            step = (interval[1] - interval[0])/(total_iterations * 2)
+            let sum_2 = 0
+            x_i = interval[0] + step
+            while (i < total_iterations * 2) {
+                sum_2 += func(x_i)
+                x_i += step
+                i++
+            }
+            sum_2 = sum_2 * step
+            R = Math.abs(sum_1 - sum_2)
+            if (R <= ACCURACY) {
+                final_sum = sum_2
+                total_iterations *= 2
+                break
+            }
+            total_iterations *= 2
         }
         
-        return sum * step
+        
+        return [final_sum, total_iterations]
     }
 
-    function left(func, interval, step) {
-        const total_iterations = (interval[1] - interval[0])/step
-        let sum = 0
-        let i = 0
-        let x_i = interval[0]
-        while (i < total_iterations) {
-            sum += func(x_i)
-            x_i += step
-            i++
-        }
-
-        return sum * step
-    }
-
-    function middle(func, interval, step) {
-        const total_iterations = (interval[1] - interval[0])/step
-        let x_prev = interval[0]
-        let sum = 0
-        let i = 0
-        let x_i = x_prev + step
-        while (i < total_iterations) {
-            let x_mid = (x_i + x_prev) / 2
-            sum += func(x_mid)
-            x_prev = x_i
-            x_i += step
-            i++
+    function left(func, interval, total_iterations) {
+        let R = 1
+        let final_sum
+        while (true) {
+            let step = (interval[1] - interval[0])/total_iterations
+            let sum_1 = 0
+            let i = 0
+            let x_i = interval[0]
+            while (i < total_iterations) {
+                sum_1 += func(x_i)
+                x_i += step
+                i++
+            }
+            sum_1 = sum_1 * step
             
+            i = 0
+            step = (interval[1] - interval[0])/(total_iterations * 2)
+            let sum_2 = 0
+            x_i = interval[0]
+            while (i < total_iterations * 2) {
+                sum_2 += func(x_i)
+                x_i += step
+                i++
+            }
+            sum_2 = sum_2 * step
+            R = Math.abs(sum_1 - sum_2)
+            total_iterations *= 2
+            if (R <= ACCURACY) {
+                final_sum = sum_2
+                break
+            }
         }
+        
+        
+        return [final_sum, total_iterations]
+    }
 
-        return sum * step
+    function middle(func, interval, total_iterations) {    
+        let R = 1
+        let final_sum
+        while (true) {
+            let step = (interval[1] - interval[0])/total_iterations
+            let sum_1 = 0
+            let i = 0
+            let x_prev = interval[0]
+            let x_i = x_prev + step
+            while (i < total_iterations) {
+                let x_mid = (x_i + x_prev) / 2
+                sum_1 += func(x_mid)
+                x_prev = x_i
+                x_i += step
+                i++
+            }
+            sum_1 = sum_1 * step
+            i = 0
+            step = (interval[1] - interval[0])/(total_iterations * 2)
+            let sum_2 = 0
+            x_prev = interval[0]
+            x_i = x_prev + step
+            while (i < total_iterations * 2) {
+                let x_mid = (x_i + x_prev) / 2
+                sum_2 += func(x_mid)
+                x_prev = x_i
+                x_i += step
+                i++
+            }
+            sum_2 = sum_2 * step
+            R = Math.abs(sum_1 - sum_2)
+            total_iterations *= 2
+            if (R <= ACCURACY) {
+                final_sum = sum_2
+                break
+            } 
+        }
+        
+        
+        return [final_sum, total_iterations]
     }
     
     
-    
-    console.log(right(func, interval, step))
+    console.warn("Метод прямоугольников (Правый):")
+    console.log("Значение интеграла: " + right(main_func, interval_ogr, 4)[0]
+                + "\t Число разбиения: " + right(main_func, interval_ogr, 4)[1])
+                console.log(main_F(interval_ogr[1]) - main_F(interval_ogr[0]))
     console.log("--------")
-    console.log(middle(func, interval, step))
+    console.warn("Метод прямоугольник (Серединный):")
+    console.log("Значение интеграла: " + middle(main_func, interval_ogr, 4)[0]
+                + "\t Число разбиения: " + middle(main_func, interval_ogr, 4)[1])
     console.log("--------")
-    console.log(left(func, interval, step))
+    console.warn("Метод прямоугольник (Левый):")
+    console.log("Значение интеграла: " + left(main_func, interval_ogr, 4)[0]
+                + "\t Число разбиения: " + left(main_func, interval_ogr, 4)[1])
     console.log("--------")
 
 }
-square_method(f2, [1,2], 0.1)
 
+// Метод трапеций
+function trapeze_method(func, interval, total_iterations) {
+    let R = 1
+    let final_sum
+    while (true) {
+        let step = (interval[1] - interval[0])/total_iterations
+        let sum_1 = 0
+        let i = 0
+        let x_i = interval[0] + step
+        while (i < total_iterations - 1) {
+            sum_1 += func(x_i)
+            x_i += step
+            i++
+        }
+        sum_1 = step * (sum_1 + (func(interval[0]) + func(interval[1]))/2)
+        
+        i = 0
+        step = (interval[1] - interval[0])/(total_iterations * 2)
+        let sum_2 = 0
+        x_i = interval[0] + step
+        while (i < total_iterations * 2) {
+            sum_2 += func(x_i)
+            x_i += step
+            i++
+        }
+        sum_2 = step * (sum_2 + (func(interval[0]) + func(interval[1]))/2)
+        R = Math.abs(sum_1 - sum_2)
+        total_iterations *= 2
+        if (R <= ACCURACY) {
+            final_sum = sum_2
+            break
+        }
+    }
 
-// // function find_roots_from_table(func) {
-// //     let roots_array = []
+    return [final_sum, total_iterations]
+}
+
+function simpson_method(func, interval, total_iterations) {
+    let R = 1
+    let final_sum
+    while (true) {
+        let step = (interval[1] - interval[0])/total_iterations
+        let sum_1
+        let even_sum = 0
+        let odd_sum = 0
+        let i = 1
+        let x_i = interval[0]
+        while (i < total_iterations) {
+            if (i % 2 == 0) {
+                odd_sum += func(x_i)
+            } else {
+                even_sum += func(x_i)
+            }
+            x_i += step
+            i++
+        }
+        sum_1 = (step/3) * (func(interval[0]) + 2 * odd_sum + 4 * even_sum + func(x_i))
+
+        even_sum = 0
+        odd_sum = 0
+        i = 0
+        step = (interval[1] - interval[0])/(total_iterations * 2)
+        let sum_2 = 0
+        x_i = interval[0]
+        while (i < total_iterations * 2) {
+            if (i % 2 == 0) {
+                odd_sum += func(x_i)
+            } else {
+                even_sum += func(x_i)
+            }
+            x_i += step
+            i++
+        }
+        sum_2 = (step/3) * (func(interval[0]) + 2 * odd_sum + 4 * even_sum + func(x_i))
+        R = Math.abs(sum_1 - sum_2)
+        total_iterations *= 2
+        if (R <= ACCURACY) {
+            final_sum = sum_2
+            break
+        }
+    }
     
-// //     for (let x = interval_ogr[0]; x < interval_ogr[1]; x+=0.2) {
-// //         roots_array.push(x)
-// //     }
-// //     let intervals = []
-// //     for (let i = 1; i < roots_array.length; i++) {
-// //         if (func(roots_array[i]) * func(roots_array[i - 1]) < 0) {
-// //             intervals.push([roots_array[i - 1], roots_array[i]])
-// //         }
-// //     }
-    
-// //     return intervals
-
-// // }
-
-// // // Метод половинного деления
-// // function half_division(table, func) {
-// //     let intervals = table.slice()
-// //     let count_iteration = 0
-// //     let count_every_root_it = []
-// //     for (let i = 0; i < intervals.length; i++) {
-// //         while (Math.abs(func((intervals[i][0] + intervals[i][1])/2)) > ACCURACY) {
-// //             let a_0 = intervals[i][0]
-// //             let b_0 = intervals[i][1]
-// //             let x_0 = (a_0 + b_0) / 2
-// //             let fx_0 = func(x_0)
-// //             if (func(a_0) * fx_0 < 0) {
-// //                 x_0 > a_0 ? intervals[i] = [a_0, x_0] : intervals[i] = [x_0, a_0]
-// //             } else if (func(b_0) * fx_0 < 0) {
-// //                 x_0 > b_0 ? intervals[i] = [b_0, x_0] : intervals[i] = [x_0, b_0]
-// //             } 
-// //             count_iteration++
-// //         }
-// //         count_every_root_it.push(count_iteration)
-// //         count_iteration = 0
-// //     }
-// //     let ans = roots_from_interval(intervals)
-// //     let ans_func = ans.map((element) => func(element))
-    
-// //     return [ans, ans_func, count_every_root_it] 
-// // }
-
-// // function roots_from_interval(table) {
-// //     let intervals = table.slice()
-// //     for (let i = 0; i < intervals.length; i++) {
-// //         intervals[i] = (intervals[i][0] + intervals[i][1])/2 
-// //     }
-
-// //     return intervals
-// // }
-
-// // // Метод секущих
-// // function secant(table, func) {
-// //     let intervals = table.slice()
-// //     let ans = []
-// //     let count_iteration = 0
-// //     let count_every_root_it = []
-// //     for (let i = 0; i < intervals.length; i++) {
-// //         let roots = [intervals[i][1], first_apr]
-// //         let x = roots[0]
-// //         let j = 1
-// //         while (Math.abs(func(x)) > ACCURACY) {
-// //             x = roots[j] - ((roots[j] - roots[j - 1])/(func(roots[j]) - func(roots[j - 1]))) * func(roots[j])
-// //             roots.push(x)
-// //             j++
-// //             count_iteration++
-// //         }
-// //         ans.push(x)
-// //         count_every_root_it.push(count_iteration)
-// //         count_iteration = 0
-// //     }
-// //     let ans_func = ans.map((element) => func(element))
-
-// //     return [ans, ans_func, count_every_root_it] 
-// // }
-
-// // // Метод простой итерации
-// // function simple_iteration(table, func) {
-// //     let count_iteration = 0
-// //     let count_every_root_it = []
-// //     function phi(x) {
-// //         return x + (-1 / first_derivative(func, x)) * func(x)
-// //     }
-// //     let ans = []
-    
-// //     let intervals = table.slice()
-// //     for (let i = 0; i < intervals.length; i++) {
-// //         let roots = [intervals[i][1]]
-// //         roots.push(phi(roots[0]))
-// //         let n = 1
-// //         while (Math.abs(roots[n] - roots[n-1]) > ACCURACY) {
-// //             roots.push(phi(roots[n]))
-// //             n++
-// //             count_iteration++
-// //         }
-// //         count_every_root_it.push(count_iteration)
-// //         count_iteration = 0
-// //         ans.push(roots[n])
-// //     }
-
-// //     let ans_func = ans.map((element) => func(element))
-   
-
-// //     return [ans, ans_func, count_every_root_it] 
-// // }
-
-// // // Метод простой итерации 
-// // function unlinear_system_simple_iteration(system, phi, appr) {
-// //     let delta1 = 1
-// //     let delta2 = 1
-// //     let x = appr[0]
-// //     let y = appr[1]
-// //     let it_count = 0;
-// //     let bool = isConvergent(system, appr);
-// //     if (true) {
-// //         console.log("Последовательность сходиться")
-// //         while (Math.abs(delta1) > ACCURACY && Math.abs(delta2) > ACCURACY) {
-// //             const [newX, newY] = phi(x, y)
-// //             delta1 = x - newX
-// //             delta2 = y - newY
-// //             x = newX
-// //             y = newY
-// //             it_count++;
-// //         }
-// //         console.log("J = " + bool[1] + " < 0")
-// //         console.log("Количество итераций: " + it_count)
-// //         return [x,y]
-// //     } else {
-// //         console.log("J = " + bool[1] + " > 0")
-// //         return ["Последовательность", "не сходиться"]
-// //     }
-    
-    
-// // }
-// // //проверка на сходимость
-// // function isConvergent(system, initialGuess) {
-// //     const [x0, y0] = initialGuess
-// //     const dfdx = (system(x0 + 0.00001, y0)[1] - system(x0, y0)[1]) / 0.00001
-// //     const dfdy = (system(x0, y0 + 0.00001)[1] - system(x0, y0)[1]) / 0.00001
-// //     const dgydx = (system(x0 + 0.00001, y0)[0] - system(x0, y0)[0]) / 0.00001
-// //     const dgydy = (system(x0, y0 + 0.00001)[0] - system(x0, y0)[0]) / 0.00001
-// //     const J = dfdx * dgydy - dfdy * dgydx
-// //     return [Math.abs(J) < 1, Math.abs(J) ]
-// //   }
+    return [final_sum, total_iterations]
+}
 
 
 
-// function beauty_ans(arr) {
-//     console.log("Корни уравнения: ")
-//     console.log(arr[0])
-//     console.log("Значение функции в этих точках: ")
-//     console.log(arr[1])
-//     console.log("Количество итераций, потребовавщихся для каждого корня: ")
-//     for (let i = 0; i < arr[2].length; i++) {
-//        console.log("x_" + i +" --> " + arr[2][i] + " итерации")
-//     }
-//     console.log(arr[2])
-
-// }
 
 
 
-// function startAll(func) {
-//     console.clear()
-//     console.log("-------------------------***--------------------------")
-//     let table = find_roots_from_table(func)
-//     console.warn("Метод половинного деления:")
-//     let half = half_division(table, func)
-//     beauty_ans(half)
-//     let _secant_ = secant(table, func)
-//     console.warn("Метод секущих:")
-//     beauty_ans(_secant_)
-//     let _simple_ = simple_iteration(table, func)
-//     console.warn("Метод простых итераций:")
-//     beauty_ans(_simple_)
-//     console.log("-------------------------***--------------------------")
 
-// }
 
-// /* function startUnlinear(func) {
-//     console.clear()
-//     console.log("-------------------------***--------------------------")
-//     console.log(unlinear_system_simple_iteration(func()[0],func()[1], [interval_un_apr[0],interval_un_apr[1]]))
-//     console.log("-------------------------***--------------------------")
-// } */
+function startAll(func) {
+    console.clear()
+    square_method(func, interval_ogr, FIRST_N)
+    console.warn("Трапеция:")
+    console.log("Значение интеграла: " + trapeze_method(func, interval_ogr, FIRST_N)[0]
+                + "\t Число разбиения: " + trapeze_method(func, interval_ogr, FIRST_N)[1])
+    console.log("--------")
+    console.warn("Симпсон:")
+    console.log("Значение интеграла: " + simpson_method(func, interval_ogr, FIRST_N)[0]
+                + "\t Число разбиения: " + simpson_method(func, interval_ogr, FIRST_N)[1])
+
+}
+
+
 
 
 // // ******************************************************** 
 
-// document.getElementById("accuracy").addEventListener("change" ,(e) => {
-//     ACCURACY = Number(e.target.value)
-// })
-// document.getElementById("x1").addEventListener("change", (e) => {
-//     first_apr = Number(e.target.value)
-// })
+document.getElementById("accuracy").addEventListener("change" ,(e) => {
+    ACCURACY = Number(e.target.value)
+})
 
-// document.getElementById("a0").addEventListener("change", (e) => {
-//     interval_ogr[0] = Number(e.target.value)
-// })
+document.getElementById("a0").addEventListener("change", (e) => {
+    interval_ogr[0] = Number(e.target.value)
+})
 
-// document.getElementById("b0").addEventListener("change", (e) => {
-//     interval_ogr[1] = Number(e.target.value)
-// })
-// document.getElementById("x0_un").addEventListener("change", (e) => {
-//     interval_un_apr[0] = Number(e.target.value)
-// })
-// document.getElementById("x1_un").addEventListener("change", (e) => {
-//     interval_un_apr[1] = Number(e.target.value)
-// })
+document.getElementById("b0").addEventListener("change", (e) => {
+    interval_ogr[1] = Number(e.target.value)
+})
 
-// document.getElementById("sub").addEventListener("click" , (e) => {
-//     e.preventDefault()
-//     startAll(main_func)
-// })
-// /* document.getElementById("sub2").addEventListener("click" , (e) => {
-//     e.preventDefault()
-//     startUnlinear(main_system)
-// }) */
 
-// document.querySelectorAll(".func").forEach((element) => element.addEventListener("click", (e) => {
+document.getElementById("sub").addEventListener("click" , (e) => {
+    e.preventDefault()
+    startAll(main_func)
+})
+
+
+document.querySelectorAll(".func").forEach((element) => element.addEventListener("click", (e) => {
     
-//     switch(e.target.defaultValue) {
-//         case "1":
-//             main_func = f1
-//             break
-//         case "2":
-//             main_func = f2
-//             break
-//         case "3":
-//             main_func = f3
-//             break
-//         case "4":
-//             main_func = f4
-//             break
-//         case "5":
-//             main_func = f5
-//             break
-//     }
-//     graph()
-// }))
-// // document.querySelectorAll(".un").forEach((element) => element.addEventListener("click", (e) => {
+    switch(e.target.defaultValue) {
+        case "1":
+            main_func = f1
+            main_F = F1
+            break
+        case "2":
+            main_func = f2
+            main_F = F2
+            break
+        case "3":
+            main_func = f3
+            main_F = F3
+            break
+        case "4":
+            main_func = f4
+            main_F = F4
+            break
+
+    }
+    graph()
+}))
+
+
+
+
+const canvas = document.querySelector("canvas")
+const WIDTH = 600
+const HEIGHT = 600
+const DPI_WIDTH = WIDTH * 2
+const DPI_HEIGHT = HEIGHT * 2
+const MULTIPLY = 40
+
+function graph() {
+    const ctx = canvas.getContext("2d")
+    canvas.style.width = WIDTH + "px"
+    canvas.style.height = HEIGHT + "px"
+    canvas.width = DPI_WIDTH
+    canvas.height = DPI_HEIGHT
+    render_coordinates()
+    render_graph(main_func)    
+}
+graph()
+
+
+function render_unlinear_graph(system) {
+    const ctx = canvas.getContext("2d")
+    for (let i = 0; i <= system().length; i++) {
+        i % 2 == 0 ? ctx.strokeStyle = "green" : ctx.strokeStyle = "blue"
     
-// //     switch(e.target.defaultValue) {
-// //         case "1":
-// //             main_system = sys1
-// //             break
-// //         case "2":
-// //             main_system = sys2
-// //             break
-// //         case "3":
-// //             main_system = sys3
-// //             break
-// //     }
-// //     graph()
-// // }))
-
-
-
-// const canvas = document.querySelector("canvas")
-// const WIDTH = 600
-// const HEIGHT = 600
-// const DPI_WIDTH = WIDTH * 2
-// const DPI_HEIGHT = HEIGHT * 2
-// const MULTIPLY = 40
-
-// function graph() {
-//     const ctx = canvas.getContext("2d")
-//     canvas.style.width = WIDTH + "px"
-//     canvas.style.height = HEIGHT + "px"
-//     canvas.width = DPI_WIDTH
-//     canvas.height = DPI_HEIGHT
-//     render_coordinates()
-//     render_graph(main_func)
-//     render_unlinear_graph(main_system()[2])
-    
-// }
-// graph()
-
-
-// function render_unlinear_graph(system) {
-//     const ctx = canvas.getContext("2d")
-//     for (let i = 0; i <= system().length; i++) {
-//         i % 2 == 0 ? ctx.strokeStyle = "green" : ctx.strokeStyle = "blue"
-    
-//         ctx.beginPath()
-//         ctx.lineWidth = 3
+        ctx.beginPath()
+        ctx.lineWidth = 3
         
-//         for (let x = -20; x < 15; x+=0.0001) {       
-//             ctx.lineTo(x * MULTIPLY + DPI_WIDTH/2, DPI_HEIGHT/2 - (system(x)[i] * MULTIPLY))
-//         }
-//         ctx.stroke()
-//         ctx.closePath()
-//     }
+        for (let x = -20; x < 15; x+=0.0001) {       
+            ctx.lineTo(x * MULTIPLY + DPI_WIDTH/2, DPI_HEIGHT/2 - (system(x)[i] * MULTIPLY))
+        }
+        ctx.stroke()
+        ctx.closePath()
+    }
     
-//     // ctx.beginPath()
-//     // ctx.strokeStyle = "blue"
-//     // ctx.lineWidth = 3
-//     // for (let x = -15; x < 10; x+=0.0001) {
-//     //     ctx.lineTo(x * MULTIPLY + DPI_WIDTH/2, DPI_HEIGHT/2 - (system(x)[0] * MULTIPLY))
-//     // }
-//     // ctx.stroke()
-//     // ctx.closePath()
-// }
+    // ctx.beginPath()
+    // ctx.strokeStyle = "blue"
+    // ctx.lineWidth = 3
+    // for (let x = -15; x < 10; x+=0.0001) {
+    //     ctx.lineTo(x * MULTIPLY + DPI_WIDTH/2, DPI_HEIGHT/2 - (system(x)[0] * MULTIPLY))
+    // }
+    // ctx.stroke()
+    // ctx.closePath()
+}
 
 
 
-// function render_graph(func) {
-//     const ctx = canvas.getContext("2d")
-//     ctx.beginPath()
-//     ctx.strokeStyle = "red"
-//     ctx.lineWidth = 3
-//     for (let x = -DPI_WIDTH/2; x < DPI_WIDTH/2; x+=0.2) {
-//         ctx.lineTo(x * MULTIPLY + DPI_WIDTH/2, DPI_HEIGHT/2 - (func(x) * MULTIPLY))
-//     }
-//     ctx.stroke()
-//     ctx.closePath()
-// }
+function render_graph(func) {
+    const ctx = canvas.getContext("2d")
+    ctx.beginPath()
+    ctx.strokeStyle = "red"
+    ctx.lineWidth = 3
+    for (let x = -DPI_WIDTH/2; x < DPI_WIDTH/2; x+=0.2) {
+        ctx.lineTo(x * MULTIPLY + DPI_WIDTH/2, DPI_HEIGHT/2 - (func(x) * MULTIPLY))
+    }
+    ctx.stroke()
+    ctx.closePath()
+}
 
-// function render_coordinates() {
-//     const ctx = canvas.getContext("2d")
-//     ctx.moveTo(DPI_WIDTH, DPI_HEIGHT/2)
-//     ctx.lineTo(DPI_WIDTH - 30, DPI_HEIGHT/2 - 10)
-//     ctx.moveTo(DPI_WIDTH, DPI_HEIGHT/2)
-//     ctx.lineTo(DPI_WIDTH - 30, DPI_HEIGHT/2 + 10)
-//     ctx.moveTo(DPI_WIDTH/2, 0)
-//     ctx.lineTo(DPI_WIDTH/2 + 10, 30)
-//     ctx.moveTo(DPI_WIDTH/2, 0)
-//     ctx.lineTo(DPI_WIDTH/2 - 10, 30)
-//     ctx.moveTo(DPI_WIDTH/2, 0)
-//     ctx.lineTo(DPI_WIDTH/2, DPI_HEIGHT)
-//     ctx.moveTo(0, DPI_HEIGHT/2)
-//     ctx.lineTo(DPI_WIDTH, DPI_HEIGHT/2)
+function render_coordinates() {
+    const ctx = canvas.getContext("2d")
+    ctx.moveTo(DPI_WIDTH, DPI_HEIGHT/2)
+    ctx.lineTo(DPI_WIDTH - 30, DPI_HEIGHT/2 - 10)
+    ctx.moveTo(DPI_WIDTH, DPI_HEIGHT/2)
+    ctx.lineTo(DPI_WIDTH - 30, DPI_HEIGHT/2 + 10)
+    ctx.moveTo(DPI_WIDTH/2, 0)
+    ctx.lineTo(DPI_WIDTH/2 + 10, 30)
+    ctx.moveTo(DPI_WIDTH/2, 0)
+    ctx.lineTo(DPI_WIDTH/2 - 10, 30)
+    ctx.moveTo(DPI_WIDTH/2, 0)
+    ctx.lineTo(DPI_WIDTH/2, DPI_HEIGHT)
+    ctx.moveTo(0, DPI_HEIGHT/2)
+    ctx.lineTo(DPI_WIDTH, DPI_HEIGHT/2)
     
-//     ctx.font = " bold 15pt Courier"
-//     for (let i = 50; i < DPI_HEIGHT; i += 50) {
-//         ctx.moveTo(DPI_WIDTH/2 - 12, i)
-//         ctx.lineTo(DPI_WIDTH/2 + 12, i)
-//         ctx.fillText(Math.round((50*12/MULTIPLY) - i/MULTIPLY), DPI_WIDTH/2, i)
-//     }
+    ctx.font = " bold 15pt Courier"
+    for (let i = 50; i < DPI_HEIGHT; i += 50) {
+        ctx.moveTo(DPI_WIDTH/2 - 12, i)
+        ctx.lineTo(DPI_WIDTH/2 + 12, i)
+        ctx.fillText(Math.round((50*12/MULTIPLY) - i/MULTIPLY), DPI_WIDTH/2, i)
+    }
 
-//     for (let i = 50; i < DPI_WIDTH; i += 50) {
-//         ctx.moveTo(i, DPI_HEIGHT/2 - 12)
-//         ctx.lineTo(i, DPI_HEIGHT/2 + 12)
-//         ctx.fillText(-Math.round((50*12/MULTIPLY) - i/MULTIPLY), i , DPI_HEIGHT/2)
-//     }
-//     ctx.stroke()
-// }
+    for (let i = 50; i < DPI_WIDTH; i += 50) {
+        ctx.moveTo(i, DPI_HEIGHT/2 - 12)
+        ctx.lineTo(i, DPI_HEIGHT/2 + 12)
+        ctx.fillText(-Math.round((50*12/MULTIPLY) - i/MULTIPLY), i , DPI_HEIGHT/2)
+    }
+    ctx.stroke()
+}
