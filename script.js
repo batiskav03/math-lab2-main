@@ -13,6 +13,71 @@
 let ACCURACY = 0.01
 const FIRST_N = 4
 let interval_ogr = [1,2]
+let table = [[1.2, 7.4], [2.9, 9.5], [4.1, 11.1], [5.5, 12.9], [6.7, 14.6], [7.8, 17.3], [9.2, 18.2], [10.3, 20.7]] // [x,y]
+let table_1 = [[1.1 , 3.5], [ 2.3, 4.1], [3.7, 5.2], [4.5, 6.9], [5.4, 8.3], [6.8, 14.8], [7.5, 21.2]]
+function middle_square_linear(table) {
+    let SX = 0
+    let SXX = 0
+    let SY = 0
+    let SXY = 0
+    n = table.length
+    console.log(n)
+    for (let i = 0; i < n; i++) {
+        SX += table[i][0]
+        SXX += table[i][0] * table[i][0]
+        SY += table[i][1] 
+        SXY += table[i][0] * table[i][1]
+    }
+    let a = (SXY * n - SX * SY) / (SXX * n - SX * SX)
+    let b = (SXX * SY - SX * SXY) / (SXX * n - SX * SX)
+    console.log(a,b)
+    let eps = []
+    let S = 0
+    let r_top = 0;
+    let r_bot1 = 0;
+    let r_bot2 = 0;
+    for (let i = 0; i < n; i++) {
+        let f_i = a*table[i][0] + b
+        let eps_i = f_i - table[i][1]
+        eps.push(f_i - table[i][1])
+        S += eps_i * eps_i
+
+        r_top += (table[i][0] - SX/n)*(table[i][1] - SY/n)
+        r_bot1 += Math.pow((table[i][0] - SX/n), 2)
+        r_bot2 += Math.pow((table[i][1] - SY/n), 2)
+    }
+    let r = r_top/Math.sqrt(r_bot1 * r_bot2)
+    console.log(S, r)
+
+}
+
+function middle_square_quad(table) {
+    let SX = 0
+    let SXX = 0
+    let SXXX = 0
+    let SXXXX = 0
+    let SY = 0
+    let SXY = 0
+    let SXXY = 0
+    n = table.length
+    for (let i = 0; i < n; i++) {
+        SX += table[i][0]
+        SXX += table[i][0] * table[i][0]
+        SY += table[i][1] 
+        SXY += table[i][0] * table[i][1]
+        SXXX += Math.pow(table[i][0], 3)
+        SXXXX += Math.pow(table[i][0], 4)
+        SXXY += Math.pow(table[i][0], 3) * table[i][1]
+    }
+    console.log(n)
+    let a0 = 0
+    let a1 = 0
+    let a2 = 0
+}
+middle_square_linear(table)
+middle_square_quad(table_1)
+
+
 // производная
 function first_derivative(func, x, dx) {
     dx = dx || 0.00000001
