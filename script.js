@@ -14,14 +14,16 @@ let ACCURACY = 0.01
 const FIRST_N = 4
 let interval_ogr = [1,2]
 let table = [[1.2, 7.4], [2.9, 9.5], [4.1, 11.1], [5.5, 12.9], [6.7, 14.6], [7.8, 17.3], [9.2, 18.2], [10.3, 20.7]] // [x,y]
-let table_1 = [[1.1 , 3.5], [ 2.3, 4.1], [3.7, 5.2], [4.5, 6.9], [5.4, 8.3], [6.8, 14.8], [7.5, 21.2]]
-function middle_square_linear(table) {
+let table_1 = [[1.1 , 3.5], [ 2.3, 4.1], [3.7, 5.2], [4.5, 6.9], [5.4, 8.3], [6.8, 14.8], [7.5, 21.2]] // kv
+let table_exp = [[1, 2.1], [2, 6.2], [3, 13.3], [4, 24.6], [5, 117.5]]
+let test = [[1.1, 2.73], [2.3, 5.12], [3.7, 7.74], [4.5, 8.91], [5.4, 10.59], [6.8, 12.75], [7.5, 13.43]]
+function middle_square_linear(table_func) {
+    let table = JSON.parse(JSON.stringify(table_func));
     let SX = 0
     let SXX = 0
     let SY = 0
     let SXY = 0
     n = table.length
-    console.log(n)
     for (let i = 0; i < n; i++) {
         SX += table[i][0]
         SXX += table[i][0] * table[i][0]
@@ -30,28 +32,25 @@ function middle_square_linear(table) {
     }
     let a = (SXY * n - SX * SY) / (SXX * n - SX * SX)
     let b = (SXX * SY - SX * SXY) / (SXX * n - SX * SX)
-    console.log(a,b)
     let eps = []
     let S = 0
-    let r_top = 0;
-    let r_bot1 = 0;
-    let r_bot2 = 0;
+
     for (let i = 0; i < n; i++) {
         let f_i = a*table[i][0] + b
         let eps_i = f_i - table[i][1]
         eps.push(f_i - table[i][1])
         S += eps_i * eps_i
-
-        r_top += (table[i][0] - SX/n)*(table[i][1] - SY/n)
-        r_bot1 += Math.pow((table[i][0] - SX/n), 2)
-        r_bot2 += Math.pow((table[i][1] - SY/n), 2)
+        table[i].push(f_i, eps_i)  
     }
-    let r = r_top/Math.sqrt(r_bot1 * r_bot2)
-    console.log(S, r)
-
+    let dev = Math.sqrt(S/n)
+    console.warn("Линейная функция: fx = " + a + "*x + " + b)
+    table.unshift(["x_i", "y_i", "phi(x_i)", "eps_i"])
+    console.table(table)
+    console.log("S = ", S, "; δ = ", dev)
 }
 
-function middle_square_quad(table) {
+function middle_square_quad(table_func) {
+    let table = JSON.parse(JSON.stringify(table_func));
     let SX = 0
     let SXX = 0
     let SXXX = 0
@@ -67,15 +66,165 @@ function middle_square_quad(table) {
         SXY += table[i][0] * table[i][1]
         SXXX += Math.pow(table[i][0], 3)
         SXXXX += Math.pow(table[i][0], 4)
-        SXXY += Math.pow(table[i][0], 3) * table[i][1]
+        SXXY += Math.pow(table[i][0], 2) * table[i][1]
     }
-    console.log(n)
-    let a0 = 0
-    let a1 = 0
-    let a2 = 0
+    matrix = [[n, SX, SXX, SY], [SX, SXX, SXXX, SXY], [SXX, SXXX, SXXXX, SXXY]]
+    let [a0, a1, a2] = gauss(matrix)
+
+    let eps = []
+    let S = 0
+    for (let i = 0; i < n; i++) {
+        let f_i = a2*table[i][0]*table[i][0] + a1*table[i][0] + a0
+        let eps_i = f_i - table[i][1]
+        eps.push(f_i - table[i][1])
+        S += eps_i * eps_i
+        table[i].push(f_i, eps_i)  
+    }
+    let dev = Math.sqrt(S/n)
+    console.warn("Квадратная функция: fx = " + a2 + "*x^2 + " + a1 + "*x + " + a0)
+    table.unshift(["x_i", "y_i", "phi(x_i)", "eps_i"])
+    console.table(table)
+    console.log("S = ", S, "; δ = ", dev)
+    
 }
-middle_square_linear(table)
-middle_square_quad(table_1)
+
+function log_aprox(table_func) {
+    let table = JSON.parse(JSON.stringify(table_func));
+    let SX = 0
+    let SXX = 0
+    let SY = 0
+    let SXY = 0
+    n = table.length
+    for (let i = 0; i < n; i++) {
+        SX += Math.log(table[i][0])
+        SXX += Math.log(table[i][0]) * Math.log(table[i][0])
+        SY += table[i][1] 
+        SXY += Math.log(table[i][0]) * table[i][1]
+    }
+    let a = (SXY * n - SX * SY) / (SXX * n - SX * SX)
+    let b = (SXX * SY - SX * SXY) / (SXX * n - SX * SX)
+    let eps = []
+    let S = 0
+    for (let i = 0; i < n; i++) {
+        let f_i = a*Math.log(table[i][0]) + b
+        let eps_i = f_i - table[i][1]
+        S += eps_i * eps_i
+        eps.push(f_i - table[i][1])   
+        table[i].push(f_i, eps_i)     
+    }
+    let dev = Math.sqrt(S/n)
+    console.warn("Логарифмическая функция: fx = " + a + "ln(x) + " + b)
+    table.unshift(["x_i", "y_i", "phi(x_i)", "eps_i"])
+    console.table(table)
+    console.log("S = ", S, "; δ = ", dev)
+}
+
+function exp_aprox(table_func) {
+    let table = JSON.parse(JSON.stringify(table_func));
+    let SX = 0
+    let SXX = 0
+    let SY = 0
+    let SXY = 0
+    n = table.length
+    for (let i = 0; i < n; i++) {
+        SX += table[i][0]
+        SXX += table[i][0] * table[i][0]
+        SY += Math.log(table[i][1]) 
+        SXY += table[i][0] * Math.log(table[i][1])
+    }
+    
+    let a = ((SXY * n - SX * SY) / (SXX * n - SX * SX))
+    let b = (SXX * SY - SX * SXY) / (SXX * n - SX * SX)
+    
+    let eps = []
+    let S = 0
+    for (let i = 0; i < n; i++) {
+        let f_i = Math.exp(b)*Math.exp(a*table[i][0])
+        let eps_i = f_i - table[i][1]
+        table[i].push(f_i, eps_i)
+        eps.push(f_i - table[i][1])
+        S += eps_i * eps_i
+    }
+    
+    
+    let dev = Math.sqrt(S/n)
+    console.warn("Экспоненциальная функция: fx = " + Math.exp(b) + "*e^(" + a + "*x)")
+    table.unshift(["x_i", "y_i", "phi(x_i)", "eps_i"])
+    console.table(table)
+    console.log("S = ", S, "; δ = ", dev)}
+
+
+function power_aprox(table_func) {
+    let table = JSON.parse(JSON.stringify(table_func));
+    let SX = 0
+    let SXX = 0
+    let SY = 0
+    let SXY = 0
+    n = table.length
+    for (let i = 0; i < n; i++) {
+        SX += Math.log(table[i][0])
+        SXX += Math.log(table[i][0]) * Math.log(table[i][0])
+        SY += Math.log(table[i][1])
+        SXY += Math.log(table[i][0]) * Math.log(table[i][1])
+
+    }
+    
+    let a = ((SXY * n - SX * SY) / (SXX * n - SX * SX))
+    let b = (SXX * SY - SX * SXY) / (SXX * n - SX * SX)
+    let eps = []
+    let S = 0
+
+    for (let i = 0; i < n; i++) {
+        let f_i = Math.exp(b)*Math.pow(table[i][0], a) 
+        let eps_i = f_i - table[i][1]
+        eps.push(f_i - table[i][1])
+        S += eps_i * eps_i
+        table[i].push(f_i, eps_i) 
+    }
+    let dev = Math.sqrt(S/n)
+    console.warn("Степенная функция: fx = "+ Math.exp(b) +"*x^" + a)
+    table.unshift(["x_i", "y_i", "phi(x_i)", "eps_i"])
+    console.table(table)
+    console.log("S = ", S, "; δ = ", dev)}
+ 
+function gauss(matrix) {
+    for (let i = 0; i < matrix.length - 1; i++) {
+        let max = i
+        for (let m = i + 1; m < matrix.length; m++) {
+            if (matrix[m][i] > matrix[max][i]) {
+                max = m;
+            }
+        }
+        if (max != i) {
+            for (let j = 0; j <= matrix.length; j++) {
+                let c = matrix[i][j];
+                matrix[i][j] = matrix[max][j];
+                matrix[max][j] = c;
+            }
+        }
+        for (let k = i + 1; k < matrix.length; k++ ) {
+            let multiplier = matrix[k][i] / matrix[i][i];
+            for (let j = i; j <= matrix.length; j++) {
+                matrix[k][j] -= multiplier * matrix[i][j];
+            }
+        }
+        
+    }
+    let solutions = []
+    for (let i = matrix.length - 1; i >= 0; i--) {
+        let sum = 0;
+        for (let j = i + 1; j < matrix.length; j++) {
+            sum += matrix[i][j] * solutions[j];
+        }
+        solutions[i] = (matrix[i][matrix.length] - sum) / matrix[i][i];
+    }
+    return solutions
+}
+power_aprox(test)
+exp_aprox(test)
+log_aprox(test)
+middle_square_linear(test)
+middle_square_quad(test)
 
 
 // производная
