@@ -16,7 +16,7 @@ let interval_ogr = [1,2]
 let table = [[1.2, 7.4], [2.9, 9.5], [4.1, 11.1], [5.5, 12.9], [6.7, 14.6], [7.8, 17.3], [9.2, 18.2], [10.3, 20.7]] // [x,y]
 let table_1 = [[1.1 , 3.5], [ 2.3, 4.1], [3.7, 5.2], [4.5, 6.9], [5.4, 8.3], [6.8, 14.8], [7.5, 21.2]] // kv
 let table_exp = [[1, 2.1], [2, 6.2], [3, 13.3], [4, 24.6], [5, 117.5]]
-let test = [[1.1, 2.73], [2.3, 5.12], [3.7, 7.74], [4.5, 8.91], [5.4, 10.59], [6.8, 12.75], [7.5, 13.43]]
+let test;
 function middle_square_linear(table_func) {
     let table = JSON.parse(JSON.stringify(table_func));
     let SX = 0
@@ -47,6 +47,7 @@ function middle_square_linear(table_func) {
     table.unshift(["x_i", "y_i", "phi(x_i)", "eps_i"])
     console.table(table)
     console.log("S = ", S, "; δ = ", dev)
+    return [dev, (x) => a * x + b]
 }
 
 function middle_square_quad(table_func) {
@@ -85,6 +86,7 @@ function middle_square_quad(table_func) {
     table.unshift(["x_i", "y_i", "phi(x_i)", "eps_i"])
     console.table(table)
     console.log("S = ", S, "; δ = ", dev)
+    return [dev, (x) => a2*x*x + a1*x + a0]
     
 }
 
@@ -94,15 +96,22 @@ function log_aprox(table_func) {
     let SXX = 0
     let SY = 0
     let SXY = 0
+    let flag = 0
     n = table.length
     for (let i = 0; i < n; i++) {
         SX += Math.log(table[i][0])
         SXX += Math.log(table[i][0]) * Math.log(table[i][0])
         SY += table[i][1] 
         SXY += Math.log(table[i][0]) * table[i][1]
+        if (table[i][0] < 0) flag = 1
     }
-    let a = (SXY * n - SX * SY) / (SXX * n - SX * SX)
-    let b = (SXX * SY - SX * SXY) / (SXX * n - SX * SX)
+    if (flag) {
+        console.error("Невозможна апроксимация степенной функцией")
+        return
+    } 
+
+    matrix = [[SXX, SX, SXY], [SX, n, SY]]
+    let [a, b] = gauss(matrix)
     let eps = []
     let S = 0
     for (let i = 0; i < n; i++) {
@@ -117,6 +126,8 @@ function log_aprox(table_func) {
     table.unshift(["x_i", "y_i", "phi(x_i)", "eps_i"])
     console.table(table)
     console.log("S = ", S, "; δ = ", dev)
+
+    return [dev, (x) => a*Math.log(x) + b]
 }
 
 function exp_aprox(table_func) {
@@ -126,13 +137,18 @@ function exp_aprox(table_func) {
     let SY = 0
     let SXY = 0
     n = table.length
+    let flag = 0
     for (let i = 0; i < n; i++) {
         SX += table[i][0]
         SXX += table[i][0] * table[i][0]
         SY += Math.log(table[i][1]) 
         SXY += table[i][0] * Math.log(table[i][1])
+        if (table[i][1] < 0 || table[i][0] < 0) flag = 1
     }
-    
+    if (flag) {
+        console.error("Невозможна апроксимация экспоненциальной функцией")
+        return
+    } 
     let a = ((SXY * n - SX * SY) / (SXX * n - SX * SX))
     let b = (SXX * SY - SX * SXY) / (SXX * n - SX * SX)
     
@@ -151,7 +167,9 @@ function exp_aprox(table_func) {
     console.warn("Экспоненциальная функция: fx = " + Math.exp(b) + "*e^(" + a + "*x)")
     table.unshift(["x_i", "y_i", "phi(x_i)", "eps_i"])
     console.table(table)
-    console.log("S = ", S, "; δ = ", dev)}
+    console.log("S = ", S, "; δ = ", dev)
+    return [dev, (x) => Math.exp(b) * Math.pow(Math.E,a)*x]
+}
 
 
 function power_aprox(table_func) {
@@ -160,20 +178,24 @@ function power_aprox(table_func) {
     let SXX = 0
     let SY = 0
     let SXY = 0
+    let flag = 0
     n = table.length
     for (let i = 0; i < n; i++) {
         SX += Math.log(table[i][0])
         SXX += Math.log(table[i][0]) * Math.log(table[i][0])
         SY += Math.log(table[i][1])
         SXY += Math.log(table[i][0]) * Math.log(table[i][1])
-
+        if (table[i][1] < 0 || table[i][0] < 0) flag = 1
     }
-    
-    let a = ((SXY * n - SX * SY) / (SXX * n - SX * SX))
-    let b = (SXX * SY - SX * SXY) / (SXX * n - SX * SX)
+    if (flag) {
+        console.error("Невозможна апроксимация степенной функцией")
+        return
+    } 
+    matrix = [[SXX, SX, SXY], [SX, n, SY]]
+    let [a, b] = gauss(matrix)
     let eps = []
     let S = 0
-
+    
     for (let i = 0; i < n; i++) {
         let f_i = Math.exp(b)*Math.pow(table[i][0], a) 
         let eps_i = f_i - table[i][1]
@@ -185,8 +207,23 @@ function power_aprox(table_func) {
     console.warn("Степенная функция: fx = "+ Math.exp(b) +"*x^" + a)
     table.unshift(["x_i", "y_i", "phi(x_i)", "eps_i"])
     console.table(table)
-    console.log("S = ", S, "; δ = ", dev)}
+    console.log("S = ", S, "; δ = ", dev)
+    
+    return [dev, (x) => Math.exp(b)*Math.pow(x, a)]
+    
+    
+    
+}
  
+function determinantTriangle( matrix) {
+    let determinant = 1;
+    for (let i = 0; i < matrix.length; i++) {
+        determinant *= matrix[i][i];
+        
+    }
+    return determinant;
+}
+
 function gauss(matrix) {
     for (let i = 0; i < matrix.length - 1; i++) {
         let max = i
@@ -210,6 +247,10 @@ function gauss(matrix) {
         }
         
     }
+
+    if (!determinantTriangle(matrix)) {
+        return [0]
+    }
     let solutions = []
     for (let i = matrix.length - 1; i >= 0; i--) {
         let sum = 0;
@@ -218,13 +259,62 @@ function gauss(matrix) {
         }
         solutions[i] = (matrix[i][matrix.length] - sum) / matrix[i][i];
     }
+    console.log(solutions)
     return solutions
+    
+    
 }
-power_aprox(test)
-exp_aprox(test)
-log_aprox(test)
-middle_square_linear(test)
-middle_square_quad(test)
+
+function cube_aprox(table_func) {
+    let table = JSON.parse(JSON.stringify(table_func));
+    let x_sum = 0
+    let x_square = 0
+    let x_cube = 0
+    let x_fourth = 0
+    let x_fifth = 0
+    let x_sixth = 0
+    let y_sum = 0
+    let x_y = 0
+    let x_square_y = 0
+    let x_cube_y = 0
+    let n = table.length
+    for (let i = 0; i < n; i++) {
+        x_sum += table[i][0]
+        x_square += table[i][0] ** 2
+        x_cube += table[i][0] ** 3
+        x_fourth += table[i][0] ** 4
+        x_fifth += table[i][0] ** 5
+        x_sixth += table[i][0] ** 6
+        y_sum += table[i][1]
+        x_y += table[i][0] * table[i][1]
+        x_square_y += table[i][0] ** 2 * table[i][1]
+        x_cube_y += table[i][0] ** 3 * table[i][1]
+    }
+    matrix = [[n, x_sum, x_square, x_cube, y_sum], [x_sum, x_cube, x_fourth, x_fifth, x_y],
+     [x_square, x_cube, x_fourth, x_fifth, x_square_y],
+     [x_cube, x_fourth, x_fifth, x_sixth, x_cube_y]]
+
+    let [a0, a1, a2, a3] = gauss(matrix)
+    if (a0 == 0 && !a1 && !a2) {
+        console.error("Апроксимация кубической функцией невозможна")
+        return
+    }
+    let eps = []
+    let S = 0
+    for (let i = 0; i < n; i++) {
+        let f_i = a3*table[i][0]*table[i][0]*table[i][0]  + a2*table[i][0]*table[i][0] + a1*table[i][0] + a0
+        let eps_i = f_i - table[i][1]
+        eps.push(f_i - table[i][1])
+        S += eps_i * eps_i
+        table[i].push(f_i, eps_i)  
+    }
+    let dev = Math.sqrt(S/n)
+    console.warn("Кубическая функция: fx = "+ a3 + "*x^3 + " + a2 + "*x^2 + " + a1 + "*x + " + a0)
+    table.unshift(["x_i", "y_i", "phi(x_i)", "eps_i"])
+    console.table(table)
+    console.log("S = ", S, "; δ = ", dev)
+    return [dev, (x) => a3*x*x*x + a2*x*x + a1*x + a0]
+}
 
 
 // производная
@@ -234,311 +324,61 @@ function first_derivative(func, x, dx) {
     return (func(x + dx) - func(x))/dx
 }
 
-function f1(x) {
-
-    return Math.pow(x,3) - 9*x - 8
-}
-
-function f2(x) {
-
-    return Math.log(x)
-}
-
-function f3(x) {
-
-    return x*x + 3.22 * x - 1.11
-}
-
-function f4(x) {
-
-    return x * x
-}
 
 
-function F1(x) {
-   return x**4/4 - (9/2) * (x ** 2) - 8 * x
-}
 
-function F2(x) {
-    return x*Math.log(x) - x
-}
- 
-function F3(x) {
-    return (x**3)/3 + (3.22/2) * (x**2) - 1.11*x
-}
 
-function F4(x) {
-    return x**3/3
+
+
+
+
+
+function startAll(test) {
+    let arr = []
+    arr.push(middle_square_linear(test))
+    arr.push(power_aprox(test))
+    arr.push(exp_aprox(test))
+    arr.push(log_aprox(test))
+    arr.push(middle_square_quad(test))
+    arr.push(cube_aprox(table))
+    arr.sort()
+    let main_func = arr[0][1]
+    console.warn(main_func)
+    render_graph(main_func, "black")
+    render_graph(arr[1][1], "red")
+    render_graph(arr[2][1], "green")
+    render_graph(arr[3][1], "blue")
+
+    test.forEach((e) => drawDot(e[0],e[1]))
+
+
 }
 
 
-let main_func = f1
-let main_F = f1
-
-
-
-// Метод прямоугольников
-function square_method(func, interval, total_iterations) {
-    function right(func, interval, total_iterations) {
-        let R = 1
-        let final_sum
-        while (true) {
-            let step = (interval[1] - interval[0])/total_iterations
-            let sum_1 = 0
-            let i = 0
-            let x_i = interval[0] + step
-            while (i < total_iterations) {
-                sum_1 += func(x_i)
-                x_i += step
-                i++
-            }
-            sum_1 = sum_1 * step
-            
-            i = 0
-            step = (interval[1] - interval[0])/(total_iterations * 2)
-            let sum_2 = 0
-            x_i = interval[0] + step
-            while (i < total_iterations * 2) {
-                sum_2 += func(x_i)
-                x_i += step
-                i++
-            }
-            sum_2 = sum_2 * step
-            R = Math.abs(sum_1 - sum_2)
-            if (R <= ACCURACY) {
-                final_sum = sum_2
-                total_iterations *= 2
-                break
-            }
-            total_iterations *= 2
-        }
-        
-        
-        return [final_sum, total_iterations]
-    }
-
-    function left(func, interval, total_iterations) {
-        let R = 1
-        let final_sum
-        while (true) {
-            let step = (interval[1] - interval[0])/total_iterations
-            let sum_1 = 0
-            let i = 0
-            let x_i = interval[0]
-            while (i < total_iterations) {
-                sum_1 += func(x_i)
-                x_i += step
-                i++
-            }
-            sum_1 = sum_1 * step
-            
-            i = 0
-            step = (interval[1] - interval[0])/(total_iterations * 2)
-            let sum_2 = 0
-            x_i = interval[0]
-            while (i < total_iterations * 2) {
-                sum_2 += func(x_i)
-                x_i += step
-                i++
-            }
-            sum_2 = sum_2 * step
-            R = Math.abs(sum_1 - sum_2)
-            total_iterations *= 2
-            if (R <= ACCURACY) {
-                final_sum = sum_2
-                break
-            }
-        }
-        
-        
-        return [final_sum, total_iterations]
-    }
-
-    function middle(func, interval, total_iterations) {    
-        let R = 1
-        let final_sum
-        while (true) {
-            let step = (interval[1] - interval[0])/total_iterations
-            let sum_1 = 0
-            let i = 0
-            let x_prev = interval[0]
-            let x_i = x_prev + step
-            while (i < total_iterations) {
-                let x_mid = (x_i + x_prev) / 2
-                sum_1 += func(x_mid)
-                x_prev = x_i
-                x_i += step
-                i++
-            }
-            sum_1 = sum_1 * step
-            i = 0
-            step = (interval[1] - interval[0])/(total_iterations * 2)
-            let sum_2 = 0
-            x_prev = interval[0]
-            x_i = x_prev + step
-            while (i < total_iterations * 2) {
-                let x_mid = (x_i + x_prev) / 2
-                sum_2 += func(x_mid)
-                x_prev = x_i
-                x_i += step
-                i++
-            }
-            sum_2 = sum_2 * step
-            R = Math.abs(sum_1 - sum_2)
-            total_iterations *= 2
-            if (R <= ACCURACY) {
-                final_sum = sum_2
-                break
-            } 
-        }
-        
-        
-        return [final_sum, total_iterations]
-    }
+$.getJSON("io.json", function(fileData) {
+    test = [...fileData]
     
-    
-    console.warn("Метод прямоугольников (Правый):")
-    console.log("Значение интеграла: " + right(main_func, interval_ogr, 4)[0]
-                + "\t Число разбиения: " + right(main_func, interval_ogr, 4)[1])
-                console.log(main_F(interval_ogr[1]) - main_F(interval_ogr[0]))
-    console.log("--------")
-    console.warn("Метод прямоугольник (Серединный):")
-    console.log("Значение интеграла: " + middle(main_func, interval_ogr, 4)[0]
-                + "\t Число разбиения: " + middle(main_func, interval_ogr, 4)[1])
-    console.log("--------")
-    console.warn("Метод прямоугольник (Левый):")
-    console.log("Значение интеграла: " + left(main_func, interval_ogr, 4)[0]
-                + "\t Число разбиения: " + left(main_func, interval_ogr, 4)[1])
-    console.log("--------")
-
-}
-
-// Метод трапеций
-function trapeze_method(func, interval, total_iterations) {
-    let R = 1
-    let final_sum
-    while (true) {
-        let step = (interval[1] - interval[0])/total_iterations
-        let sum_1 = 0
-        let i = 0
-        let x_i = interval[0] + step
-        while (i < total_iterations - 1) {
-            sum_1 += func(x_i)
-            x_i += step
-            i++
-        }
-        sum_1 = step * (sum_1 + (func(interval[0]) + func(interval[1]))/2)
-        
-        i = 0
-        step = (interval[1] - interval[0])/(total_iterations * 2)
-        let sum_2 = 0
-        x_i = interval[0] + step
-        while (i < total_iterations * 2) {
-            sum_2 += func(x_i)
-            x_i += step
-            i++
-        }
-        sum_2 = step * (sum_2 + (func(interval[0]) + func(interval[1]))/2)
-        R = Math.abs(sum_1 - sum_2)
-        total_iterations *= 2
-        if (R <= ACCURACY) {
-            final_sum = sum_2
-            break
-        }
-    }
-
-    return [final_sum, total_iterations]
-}
-
-function simpson_method(func, interval, total_iterations) {
-    let R = 1
-    let final_sum
-    while (true) {
-        let step = (interval[1] - interval[0])/total_iterations
-        let sum_1
-        let even_sum = 0
-        let odd_sum = 0
-        let i = 1
-        let x_i = interval[0]
-        while (i < total_iterations) {
-            if (i % 2 == 0) {
-                odd_sum += func(x_i)
-            } else {
-                even_sum += func(x_i)
-            }
-            x_i += step
-            i++
-        }
-        sum_1 = (step/3) * (func(interval[0]) + 2 * odd_sum + 4 * even_sum + func(x_i))
-
-        even_sum = 0
-        odd_sum = 0
-        i = 0
-        step = (interval[1] - interval[0])/(total_iterations * 2)
-        let sum_2 = 0
-        x_i = interval[0]
-        while (i < total_iterations * 2) {
-            if (i % 2 == 0) {
-                odd_sum += func(x_i)
-            } else {
-                even_sum += func(x_i)
-            }
-            x_i += step
-            i++
-        }
-        sum_2 = (step/3) * (func(interval[0]) + 2 * odd_sum + 4 * even_sum + func(x_i))
-        R = Math.abs(sum_1 - sum_2)
-        total_iterations *= 2
-        if (R <= ACCURACY) {
-            final_sum = sum_2
-            break
-        }
-    }
-    
-    return [final_sum, total_iterations]
-}
-
-
-
-
-
-
-
-
-function startAll(func) {
-    console.clear()
-    square_method(func, interval_ogr, FIRST_N)
-    console.warn("Трапеция:")
-    console.log("Значение интеграла: " + trapeze_method(func, interval_ogr, FIRST_N)[0]
-                + "\t Число разбиения: " + trapeze_method(func, interval_ogr, FIRST_N)[1])
-    console.log("--------")
-    console.warn("Симпсон:")
-    console.log("Значение интеграла: " + simpson_method(func, interval_ogr, FIRST_N)[0]
-                + "\t Число разбиения: " + simpson_method(func, interval_ogr, FIRST_N)[1])
-
-}
-
-
+})
 
 
 // // ******************************************************** 
 
-document.getElementById("accuracy").addEventListener("change" ,(e) => {
-    ACCURACY = Number(e.target.value)
-})
+// document.getElementById("accuracy").addEventListener("change" ,(e) => {
+//     ACCURACY = Number(e.target.value)
+// })
 
-document.getElementById("a0").addEventListener("change", (e) => {
-    interval_ogr[0] = Number(e.target.value)
-})
+// document.getElementById("a0").addEventListener("change", (e) => {
+//     interval_ogr[0] = Number(e.target.value)
+// })
 
-document.getElementById("b0").addEventListener("change", (e) => {
-    interval_ogr[1] = Number(e.target.value)
-})
+// document.getElementById("b0").addEventListener("change", (e) => {
+//     interval_ogr[1] = Number(e.target.value)
+// })
 
 
 document.getElementById("sub").addEventListener("click" , (e) => {
     e.preventDefault()
-    startAll(main_func)
+    startAll(test)
 })
 
 
@@ -546,19 +386,15 @@ document.querySelectorAll(".func").forEach((element) => element.addEventListener
     
     switch(e.target.defaultValue) {
         case "1":
-            main_func = f1
             main_F = F1
             break
         case "2":
-            main_func = f2
             main_F = F2
             break
         case "3":
-            main_func = f3
             main_F = F3
             break
         case "4":
-            main_func = f4
             main_F = F4
             break
 
@@ -583,7 +419,6 @@ function graph() {
     canvas.width = DPI_WIDTH
     canvas.height = DPI_HEIGHT
     render_coordinates()
-    render_graph(main_func)    
 }
 graph()
 
@@ -615,14 +450,23 @@ function render_unlinear_graph(system) {
 
 
 
-function render_graph(func) {
+function render_graph(func, color) {
     const ctx = canvas.getContext("2d")
     ctx.beginPath()
-    ctx.strokeStyle = "red"
+    ctx.strokeStyle = color
     ctx.lineWidth = 3
-    for (let x = -DPI_WIDTH/2; x < DPI_WIDTH/2; x+=0.2) {
+    for (let x = test[0][0]; x < DPI_WIDTH/2; x+=0.2) {
         ctx.lineTo(x * MULTIPLY + DPI_WIDTH/2, DPI_HEIGHT/2 - (func(x) * MULTIPLY))
     }
+    ctx.stroke()
+    ctx.closePath()
+}
+
+function drawDot(x, y, color = "blue", size = 5) {
+    let ctx = canvas.getContext("2d")
+    ctx.beginPath()
+    ctx.strokeStyle = color
+    ctx.arc(x * MULTIPLY + DPI_WIDTH / 2, DPI_HEIGHT / 2 - y * MULTIPLY, size, 0 * Math.PI, 2 * Math.PI)
     ctx.stroke()
     ctx.closePath()
 }
@@ -646,7 +490,7 @@ function render_coordinates() {
     for (let i = 50; i < DPI_HEIGHT; i += 50) {
         ctx.moveTo(DPI_WIDTH/2 - 12, i)
         ctx.lineTo(DPI_WIDTH/2 + 12, i)
-        ctx.fillText(Math.round((50*12/MULTIPLY) - i/MULTIPLY), DPI_WIDTH/2, i)
+        ctx.fillText(epsRound((50*12/MULTIPLY) - i/MULTIPLY), DPI_WIDTH/2, i)
     }
 
     for (let i = 50; i < DPI_WIDTH; i += 50) {
@@ -656,3 +500,11 @@ function render_coordinates() {
     }
     ctx.stroke()
 }
+
+function epsRound(val) {
+    let multiplier = 1 / 0.5
+    return Math.round(val * multiplier) / multiplier
+}
+
+// console.error(1)
+// gauss([[1,3,2,55,24], [23, 44, 25, 21, 128], [4, 2, 5, 1, 52], [42, 23, 34, 12, 77]])
