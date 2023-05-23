@@ -1,4 +1,4 @@
-let test;
+let test
 $.getJSON("io.json", function(fileData) {
     test = [...fileData]
 })
@@ -22,8 +22,9 @@ function lagrange(x, table_func = test) {
         
         sum += tmp * table[i][1]
     }
-    return sum;
+    return sum
 }
+
 
 function solve_delta_table(table_func) {
     let table = JSON.parse(JSON.stringify(table_func))
@@ -33,7 +34,7 @@ function solve_delta_table(table_func) {
     }
 
     
-    for (let i = 0; i < delta_y_table[0].length; i++) {
+    for (let i = 0; i < delta_y_table[0].length - 1; i++) {
         let tmp_arr = []
         for (let j = 1; j < delta_y_table[i].length; j++) {
             tmp_arr.push(delta_y_table[i][j] - delta_y_table[i][j - 1])
@@ -61,18 +62,18 @@ function newtone(x, table_func = test) {
     let ans = 0
     if (index <= table.length / 2 ) {
         for (let i = 0; i < delta_y_table.length - index; i++) {
-            let multiply = 1;
+            let multiply = 1
             for (let j = 0; j < i; j++) {
                 multiply *= t - j
             }
             ans += delta_y_table[i][index] * multiply / factorial(i)
-
+ 
         }
     } else {
         let limit = index
 
         for (let i = 0; i < limit; i++) {
-            let multiply = 1;
+            let multiply = 1
             for (let j = 0; j < i; j++) {
                 multiply *= t - j
             }
@@ -111,8 +112,8 @@ document.getElementById("sub").addEventListener("click" , (e) => {
 
 function startAll(test) {
     console.table(solve_delta_table(test))
-    render_graph(newtone, "black", 0.01, 0, 10)
-    render_graph(lagrange, "red")
+    render_graph(newtone, "black", 0.01, -10, 10)
+
     test.forEach((e) => drawDot(e[0],e[1]))
 
 
@@ -143,26 +144,13 @@ function graph() {
 graph()
 
 
-function render_graph(func, color, multiply = 0.2, x1 = -50, x2 = 50) {
+function render_graph(func, color, step = 0.2, x1 = -50, x2 = 50) {
     const ctx = canvas.getContext("2d")
     ctx.beginPath()
     ctx.strokeStyle = color
     ctx.lineWidth = 3
-    for (let x = x1; x < x2; x+=multiply) {
+    for (let x = x1; x < x2; x+=step) {
         ctx.lineTo(x * MULTIPLY + DPI_WIDTH/2, DPI_HEIGHT/2 - (func(x) * MULTIPLY))
-    }
-    ctx.stroke()
-    ctx.closePath()
-}
-
-function render_graph_arr(func, color, multiply = 0.2, x1 = -50, x2 = 50) {
-    const ctx = canvas.getContext("2d")
-    ctx.beginPath()
-    ctx.strokeStyle = color
-    ctx.lineWidth = 3
-    for (let x = x1; x < x2; x+=0.01) {
-
-        ctx.lineTo(x * MULTIPLY + DPI_WIDTH/2, DPI_HEIGHT/2 - (func(x)[1] * MULTIPLY))
     }
     ctx.stroke()
     ctx.closePath()
