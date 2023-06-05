@@ -2,12 +2,73 @@ let test
 $.getJSON("io.json", function(fileData) {
     test = [...fileData]
 })
+let diff_interval = [1,1.5]
+let h = 0.1
+let eps
+let x0 = diff_interval[0]
+let y0
 
 function factorial(x) {
     let ans = 1
     for (let i = 1; i <= x; i++) ans *= i
     return ans
 }
+
+function f1(x,y) {
+    return y + (1+x) * Math.pow(y,2)
+}
+
+function modificated_ayler(func, x0, y0) {
+    let ans_table = [[x0,y0]]
+    for (let x = diff_interval[0] + h ; x < diff_interval[1]; x+=h) {
+        y0 = y0 + (h/2) * (func(x, y0) + func(x+h, y0 + h * func(x, y0)))
+        ans_table.push([x, y0])
+    }
+    console.table(ans_table)
+}
+
+function runge_kutta_cycle(func, x0, y0) {
+    let k1 = h * func(x0, y0)
+    let k2 = h * func(x0 + h/2, y0 + k1/2)
+    let k3 = h * func(x0 + h/2, y0 + k2/2)
+    let k4 = h * func(x0 + h, y0 + k3)
+    return y0 + (1/6) *(k1 + 2*k2 + 2*k3 + k4)
+    
+}
+
+function runge_kutta(func, x0, y0) {
+    let ans_table = [[x0,y0]]
+    for (let x = x0 + h ; x < diff_interval[1]; x+=h) {
+        y0 = runge_kutta_cycle(func, x, y0)
+        ans_table.push([x, y0])
+    }
+    console.table(ans_table)
+}
+
+function calculate_deltas(func, ans_table) {
+    if (ans_table < 2) {
+        for (let i = 0; i < 3; i++) {
+            x0+=h
+            y0 = runge_kutta_cycle(func, x0, y0)
+            ans_table.push([x0,y0])
+        }
+    }
+    let deltas = solve_delta_table(ans_table)
+    
+    return [deltas, ans_table]
+}
+
+function adams(func, x0, y0) {
+    let result = calculate_deltas(func, [[x0, y0]])
+    let deltas = result[0]
+    let ans_table = result[1]
+    console.log(deltas, last_y)
+    
+}
+
+// runge_kutta(f1, x0, -1)
+// modificated_ayler(f1, x0, -1)
+adams(f1, x0, -1)
 
 function lagrange(x, table_func = test) {
     let table = JSON.parse(JSON.stringify(table_func))
