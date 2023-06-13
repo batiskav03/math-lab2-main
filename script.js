@@ -15,12 +15,12 @@ function factorial(x) {
     return ans
 }
 
-function f1() {
+function f1(x, y) {
     let diff = (x, y) => y + Math.sin(x)
     let real = (x) => {
-        let tempResult = -Math.sin(leftLimit) / 2 - Math.cos(leftLimit) / 2
-        let mult = Math.exp(leftLimit)
-        let c = (y_0 - tempResult) / mult
+        let tempResult = -Math.sin(diff_interval[0]) / 2 - Math.cos(diff_interval[0]) / 2
+        let mult = Math.exp(diff_interval[0])
+        let c = (y0 - tempResult) / mult
 
         return -Math.sin(x) / 2 - Math.cos(x) / 2 + c * Math.exp(x)
     }
@@ -41,10 +41,10 @@ function f2(x,y) {
 }
 
 
-function f3() {
+function f3(x, y) {
     let diff = (x, y) => x * y / 2
     let real = (x) => {
-        let c = y_0 / Math.exp(Math.pow(leftLimit, 2) / 4)
+        let c = y0 / Math.exp(Math.pow(diff_interval[0], 2) / 4)
         return c * Math.exp(Math.pow(x, 2) / 4)
     }
     return [diff, real]
@@ -53,27 +53,13 @@ function f3() {
 function modificated_ayler(func, x0, y0) {
     let y_0 = y0
     let tmp_h = h
-    let runge_rule = false 
-    let ans_table
-    while (!runge_rule) {
-        y_0 = y0
-        ans_table = [[x0,y0]]
-        for (let x = diff_interval[0] + tmp_h ; x <= diff_interval[1]; x+=tmp_h) {
-            y_0 = y_0 + (tmp_h/2) * (func(x, y_0) + func(x+tmp_h, y_0 + tmp_h * func(x, y_0)))
-            ans_table.push([x, y_0])
-        }
-        let tmp_ans = [[x0,y0]]
-        tmp_h /= 2
-        y_0 = y0
-        for (let x = diff_interval[0] + tmp_h ; x <= diff_interval[1]; x+=tmp_h) {
-            y_0 = y_0 + (tmp_h/2) * (func(x, y_0) + func(x+tmp_h, y_0 + tmp_h * func(x, y_0)))
-            tmp_ans.push([x, y_0])
-        }
-        if (Math.abs(ans_table[1][1] - tmp_ans[2][1])/(Math.pow(2, 2) - 1) <= eps) {
-            runge_rule = true
-        }
+    ans_table = [[x0,y0]]
+    for (let x = diff_interval[0] + tmp_h ; x <= diff_interval[1]; x+=tmp_h) {
+        y_0 = y_0 + (tmp_h/2) * (func(x, y_0) + func(x+tmp_h, y_0 + tmp_h * func(x, y_0)))
+        ans_table.push([x, y_0])
     }
     
+
 
     return ans_table
 }
@@ -87,30 +73,46 @@ function runge_kutta_cycle(func, x0, y0, height = h) {
     
 }
 
+
 function runge_kutta(func, x0, y0) {
     let y_0 = y0
     let tmp_h = h
     let runge_rule = false 
-    let ans_table
-    while (!runge_rule) {
-        y_0 = y0
-        ans_table = [[x0,y_0]]
+    let ans_table = [[x0,y_0]]
+   
+    // while (!runge_rule) {
+    //     y_0 = y0
+    //     ans_table = [[x0,y_0]]
         for (let x = x0 + tmp_h ; x <= diff_interval[1]; x+=tmp_h) {
-            y_0 = runge_kutta_cycle(func, x, y_0, tmp_h)
+            let k1 = tmp_h * func(x, y_0)
+            let k2 = tmp_h * func(x + tmp_h/2, y_0 + k1/2)
+            let k3 = tmp_h * func(x + tmp_h/2, y_0 + k2/2)
+            let k4 = tmp_h * func(x + tmp_h, y_0 + k3)
+            y_0 += (1/6) * (k1 + 2*k2 + 2*k3 + k4)
+            // y_0 = runge_kutta_cycle(func, x, y_0, tmp_h)
             ans_table.push([x, y_0])
         }
-        y_0 = y0
-        let tmp_ans = [[x0,y_0]]
-        tmp_h /= 2
-        for (let x = x0 + tmp_h ; x <= diff_interval[1]; x+=tmp_h) {
-            y_0 = runge_kutta_cycle(func, x, y_0, tmp_h)
-            tmp_ans.push([x, y_0])
-        }
-        if (Math.abs(ans_table[1][1] - tmp_ans[2][1])/(Math.pow(2, 4) - 1) <= eps ) {
-            
-            runge_rule = true
-        }
-    }
+    //     let func_2h = ans_table[3][1]
+    //     tmp_h /= 2
+    //     y_0 = y0
+    //     let tmp_table = [[x0,y_0]]
+    //     for (let x = x0 + tmp_h ; x <= diff_interval[1]; x+=tmp_h) {
+    //         let k1 = tmp_h * func(x0, y_0)
+    //         let k2 = tmp_h * func(x0 + tmp_h/2, y0 + k1/2)
+    //         let k3 = tmp_h * func(x0 + tmp_h/2, y0 + k2/2)
+    //         let k4 = tmp_h * func(x0 + tmp_h, y0 + k3)
+    //         y_0 += (1/6) * (k1 + 2*k2 + 2*k3 + k4)
+    //         // y_0 = runge_kutta_cycle(func, x, y_0, tmp_h)
+    //         tmp_table.push([x, y_0])
+    //     }
+    //     let func_h = tmp_table[6][1]
+
+    //     if ((func_2h - func_h)/(Math.pow(2,2) - 1) <= eps) {
+    //         runge_rule = true
+    //     } 
+    // }
+    
+    
     
     return ans_table
 }
@@ -121,7 +123,12 @@ function calculate_deltas(func, ans_table, height = h) {
         let y0 = ans_table[0][1]
         for (let i = 0; i < 3; i++) {
             tmp_x0+=height
-            y0 = runge_kutta_cycle(func, tmp_x0, y0, height)
+            let k1 = height * func(tmp_x0, y0)
+            let k2 = height * func(tmp_x0 + height/2, y0 + k1/2)
+            let k3 = height * func(tmp_x0 + height/2, y0 + k2/2)
+            let k4 = height * func(tmp_x0 + height, y0 + k3)
+            y0 += (1/6) * (k1 + 2*k2 + 2*k3 + k4)
+            // y0 = runge_kutta_cycle(func, tmp_x0, y0, height)
             ans_table.push([tmp_x0,y0])
             
         }
@@ -140,7 +147,7 @@ function adams(func, real_func, x0, y0) {
     while (!rule) {
         let result = calculate_deltas(func, [[x0, y0]], tmp_h)
         let deltas = result[0]
-        ans_table = result[1]
+        ans_table = runge_kutta(func, x0, y0).slice(0,4)
 
         for (let x = x0 + 4*tmp_h; x <= diff_interval[1]; x+=tmp_h) {
             let y_prev = ans_table[ans_table.length - 1][1]
@@ -214,13 +221,13 @@ function startAll(main_func) {
     console.warn("Adams: ")
     console.table(adams(main_func()[0], main_func()[1], x0, y0))
     console.warn("Modificated Ayler: ")
-    console.table(runge_kutta(main_func()[0], x0, y0))
-    console.warn("Runge-Kutta:")
     console.table(modificated_ayler(main_func()[0], x0, y0))
+    console.warn("Runge-Kutta:")
+    console.table(runge_kutta(main_func()[0], x0, y0))
     render_graph_by_table(runge_kutta(main_func()[0], x0, y0), "blue")
     render_graph_by_table(adams(main_func()[0], main_func()[1], x0, y0))
     render_graph_by_table(modificated_ayler(main_func()[0], x0, y0), "green")
-    render_graph(f2()[1], "black", 0.1 , -10, 10)
+    render_graph(main_func()[1], "black", 0.1 , -10, 10)
 }
 
 
@@ -252,7 +259,7 @@ function render_graph(func, color, step = 0.2, x1 = -50, x2 = 50) {
     const ctx = canvas.getContext("2d")
     ctx.beginPath()
     ctx.strokeStyle = color
-    ctx.lineWidth = 3
+    ctx.lineWidth = 2
     for (let x = x1; x < x2; x+=step) {
         if (Math.abs(func(x)) > 1000000) continue
         ctx.lineTo(x * MULTIPLY + DPI_WIDTH/2, DPI_HEIGHT/2 - (func(x) * MULTIPLY))
@@ -265,7 +272,7 @@ function render_graph_by_table(dots, color = "red") {
     const ctx = canvas.getContext("2d")
     ctx.beginPath()
     ctx.strokeStyle = color
-    ctx.lineWidth = 7
+    ctx.lineWidth = 2
     dots.forEach((dot) => ctx.lineTo(dot[0] * MULTIPLY + DPI_WIDTH / 2, DPI_HEIGHT / 2 - (dot[1] * MULTIPLY) ))
     ctx.stroke()
     ctx.closePath()
